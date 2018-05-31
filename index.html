@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8">
+        <title>PA Level Editor</title>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+        <link href="css/normalize.css" rel="stylesheet" type="text/css" />
+        <link href="css/main.css" rel="stylesheet" type="text/css" />
+    </head>
+    <body>
+        <div id = "content" class = "content">
+            <div></div>
+            <div class = "container">
+                <div id="wrapper" class = "wrap" :class="{ grid: isGrid, borderline: isBorder }" @mouseleave="mouseLeave">
+                     <brick-item
+                        v-for="item in itemList"
+                        :brick="item"
+                        :key="item.id"
+                        :id="item.id"
+                        :class="{ selected: item.isSelected }"
+                        :style="{ 'background-color': item.color, 'background-image': 'url(' + item.bg_image +')' }"
+                        @mousedown.native="mouseLeftDown($event)" 
+                        @mouseup.native="mouseLeftUp()"
+                        @mouseover.native="select($event)"> 
+                </brick-item>
+            </div>     
+        </div>
+        <div class="toolbox">
+            <h4>Блок<div v-if="activeColor != '#f7f9fb'" class="brick_preview" :style="{ 'background-color': activeColor }"></div></h4>
+            <div class="row">
+                <select v-model="select_type">
+                    <option disabled value="">Выберите тип</option>
+                    <option>Разрушаемый</option>
+                    <option>Неразрушаемый</option>
+                    <option>Бомба</option>
+                    <option>Телепорт</option>
+                    <option>Пусто</option>
+                </select>
+            </div>
+            <div v-if="select_type === 'Разрушаемый'">
+                <div class="row">
+                    <select v-model="select_color">
+                        <option disabled value="">Выберите цвет</option>
+                        <option>Красный</option>
+                        <option>Голубой</option>
+                        <option>Малиновый</option>
+                        <option>Зеленый</option>
+                        <option>Желтый</option>
+                        <option>Синий</option>
+                    </select>
+                </div>
+                <div class="row">Прочность:
+                    <input type="radio" id="one" value="1" v-model="picked">
+                    <label for="one">1</label>
+                    <input type="radio" id="two" value="2" v-model="picked">
+                    <label for="two">2</label>
+                    <input type="radio" id="three" value="3" v-model="picked">
+                    <label for="three">3</label>
+                </div>
+            </div>
+            <button v-on:click="applyBlockSettings" class="m-top">Применить</button>
+            <h4>Бонус<div v-if="activeBonusImage !== ''" class="bonus_preview"><img v-bind:src="activeBonusImage"></div></h4>
+            <div class="row">
+                <select id="s_bonus" v-model="select_bonus"  class="m-bottom">
+                    <option disabled value="">Выберите бонус</option>
+                    <option>Нет</option>
+                    <optgroup label="Полезные">
+                    </optgroup>   
+                </select>
+            </div>
+            <button v-on:click="applyBonusSettings">Применить</button>
+            <div class="h-line"></div>
+            <h4>Выделение</h4>
+            <div class="row row-label m-bottom-10">
+                <input type="checkbox" id="checkbox_grid" v-model="isRemove">
+                <label>снимать выделение</label>
+            </div>
+            <button v-on:click="unSelect">Снять все выделения</button>
+            <button v-on:click="selectAll">Выделить всё</button>
+            <h4>Уровень</h4>
+            <button v-on:click="loadData()">Загрузить</button>
+            <button v-on:click="download()">Сохранить</button>
+            <h4>Настройки</h4>
+            <div class="row row-label">
+                <input type="checkbox" id="checkbox_grid" v-model="isGrid">
+                <label>сетка</label>
+            </div>
+            <div class="row row-label">
+                <input type="checkbox" id="checkbox_border" v-model="isBorder">
+                <label>граница</label>
+            </div>
+        </div>
+        <div v-if="isModal" class='modal'>
+            <h4>Код уровня</h4>
+            <textarea v-model="code_text"></textarea>
+            <div class="m-footer">
+                <button v-on:click="applyCode">Загрузить</button>
+                <button v-on:click="closeModal">Отменить</button>
+            </div>    
+        </div>   
+    </div>
+    <script>
+        var i;
+        var Bricks = [];
+        var bricksColor = {"Красный": "#ff1919", "Голубой": "#1ffff9", "Малиновый": "#f339ff", "Зеленый": "#2aff2d", "Желтый": "#ffa54c", "Синий": "#1919ff"};
+        var Bonuses = [];
+        Bonuses[0] = {code: "a", name: "Жизнь", pic: "image/live.png"};
+        Bonuses[1] = {code: "b", name: "Замедление", pic: "image/slow.png"};
+        Bonuses[2] = {code: "c", name: "Магнит", pic: "image/magnet.png"};
+        Bonuses[3] = {code: "d", name: "Стрелялка", pic: "image/ack.png"};
+        Bonuses[4] = {code: "e", name: "Утроение", pic: "image/triple.png"};
+        Bonuses[5] = {code: "f", name: "Супер", pic: "image/ram.png"};
+        Bonuses[6] = {code: "g", name: "Без вредителей", pic: "image/absent.png"};
+        Bonuses[7] = {code: "h", name: "Следущий уровень", pic: "image/next.png"};
+        Bonuses[8] = {code: "i", name: "Платформа шире", pic: "image/enlarge.png"};
+        Bonuses[9] = {code: "j", name: "Пол", pic: "image/floor.png"};
+        Bonuses[10] = {code: "k", name: "", pic: ""};
+        Bonuses[11] = {code: "l", name: "", pic: ""};
+        Bonuses[12] = {code: "m", name: "Случайный +", pic: "image/random+.png"};
+        Bonuses[13] = {code: "n", name: "Смерть", pic: "image/death.png"};
+        Bonuses[14] = {code: "o", name: "Ускорение", pic: "image/quick.png"};
+        Bonuses[15] = {code: "p", name: "Супер вредители", pic: "image/pest.png"};
+        Bonuses[16] = {code: "q", name: "Супер блоки", pic: "image/shield.png"};
+        Bonuses[17] = {code: "r", name: "Платформа уже", pic: "image/reduce.png"};
+        Bonuses[18] = {code: "s", name: "Без бонусов", pic: "image/nobonus.png"};
+        Bonuses[19] = {code: "t", name: "Рестарт", pic: "image/anew.png"};
+        Bonuses[20] = {code: "u", name: "Шарик-призрак", pic: "image/invisibility.png"};
+        Bonuses[21] = {code: "v", name: "", pic: ""};
+        Bonuses[22] = {code: "w", name: "", pic: ""};
+        Bonuses[23] = {code: "x", name: "", pic: ""};
+        Bonuses[24] = {code: "y", name: "", pic: ""};
+        Bonuses[25] = {code: "z", name: "Случайный -", pic: "image/random-.png"};
+        var s_bonus = document.getElementById("s_bonus");
+        for (i = 0; i < 13; i++) {
+            if (Bonuses[i].name !== "") {
+                var option = document.createElement("option");
+                option.innerHTML = Bonuses[i].name;
+                s_bonus.appendChild(option);
+            }
+        }
+
+        var optGroup = document.createElement('optgroup');
+        optGroup.label = 'Вредные';
+        s_bonus.appendChild(optGroup);
+        for (i = 13; i < 26; i++) {
+            if (Bonuses[i].name !== "") {
+                var option = document.createElement("option");
+                option.innerHTML = Bonuses[i].name;
+                s_bonus.appendChild(option);
+            }
+        }
+
+        var down = false;
+        var bgColor = "#f7f9fb";
+
+        for (i = 0; i < 100; i++) {
+            Bricks[i] = {id: i, type: 'Пусто', color: bgColor, code: 'a', strength: 0, bonus: '_', bg_image: '', isSelected: false};
+        }
+
+        Vue.component('brick-item', {
+            props: ['brick'],
+            template: '<div class = "brick">{{ brick.text }}</div>'
+        });
+        var vm = new Vue({
+            el: '#content',
+            data: {
+                itemList: Bricks,
+                select_type: '',
+                select_color: '',
+                activeColor: '',
+                select_bonus: '',
+                activeBonusImage: '',
+                picked: 1,
+                isRemove: true,
+                isGrid: false,
+                isBorder: true,
+                isModal: false,
+                code_text: ''
+            },
+            watch: {
+                select_type: function (val) {
+                    switch (val) {
+                        case "Разрушаемый":
+                            this.activeColor = mix("#1C1B17", bricksColor[this.select_color], 25 * (this.picked - 1));
+                            if (this.activeColor === '#NaNde0f')
+                                this.activeColor = bgColor;
+                            break;
+                        case "Неразрушаемый":
+                            this.activeColor = "#e6e6fa";
+                            break;
+                        default:
+                            this.activeColor = bgColor;
+                    }
+                },
+                picked: function (val) {
+                    this.activeColor = mix("#1C1B17", bricksColor[this.select_color], 25 * (val - 1));
+                },
+                select_color: function (val) {
+                    this.activeColor = mix("#1C1B17", bricksColor[val], 25 * (this.picked - 1));
+                },
+                select_bonus: function (val) {
+                    if (val !== "Нет")
+                        this.activeBonusImage = Bonuses[bonusIndex(val)].pic;
+                    else
+                        this.activeBonusImage = "";
+                }
+
+            },
+            methods: {
+                mouseLeftDown: function (event) {
+                    targetId = Number(event.currentTarget.id);
+                    Bricks[targetId].isSelected = !Bricks[targetId].isSelected;
+                    down = true;
+                },
+                mouseLeave: function () {
+                    down = false;
+                },
+                mouseLeftUp: function () {
+                    down = false;
+                },
+                select: function (event) {
+                    if (down) {
+                        targetId = Number(event.currentTarget.id);
+                        Bricks[targetId].isSelected = !Bricks[targetId].isSelected;
+                    }
+                },
+                applyBlockSettings: function () {
+                    var f = 0;
+                    var cs = true;
+                    var ts = true;
+                    for (i = 0; i < 100; i++) {
+                        if (Bricks[i].isSelected) {
+                            f++;
+                            switch (this.select_type) {
+                                case "Разрушаемый":
+                                    if (this.activeColor !== bgColor) {
+                                        Bricks[i].type = this.select_type;
+                                        Bricks[i].color = this.activeColor;
+                                        Bricks[i].strength = this.picked;
+                                        switch (this.select_color) {
+                                            case "Красный":
+                                                Bricks[i].code = "b";
+                                                break;
+                                            case "Голубой":
+                                                Bricks[i].code = "c";
+                                                break;
+                                            case "Малиновый":
+                                                Bricks[i].code = "d";
+                                                break;
+                                            case "Зеленый":
+                                                Bricks[i].code = "e";
+                                                break;
+                                            case "Желтый":
+                                                Bricks[i].code = "f";
+                                                break;
+                                            case "Синий":
+                                                Bricks[i].code = "g";
+                                        }
+                                    } else {
+                                        cs = false; //цвет не выбран
+                                    }
+                                    break;
+                                case "Неразрушаемый":
+                                    Bricks[i].type = this.select_type;
+                                    Bricks[i].code = "h";
+                                    Bricks[i].color = "#e6e6fa";
+                                    break;
+                                case "Пусто":
+                                    Bricks[i].type = this.select_type;
+                                    Bricks[i].code = "a";
+                                    Bricks[i].color = bgColor;
+                                    break;
+                                default:
+                                    Bricks[i].type = this.select_type;
+                                    Bricks[i].code = "a";
+                                    Bricks[i].color = bgColor;
+                                    ts = false;
+                            }
+
+                        }
+                    }
+                    if (f === 0) {
+                        alert('Ничего не выделено!');
+                        return;
+                    }
+                    if (!ts) {
+                        alert('Выберите тип блока!');
+                        return;
+                    }
+                    if (!cs) {
+                        alert('Выберите цвет блока!');
+                        return;
+                    }
+                    if (this.isRemove && cs && ts)
+                        removeSelection();
+                },
+                applyBonusSettings: function () {
+                    var f = 0;
+                    var ts = false;
+                    for (var i = 0; i < 100; i++) {
+                        if (Bricks[i].isSelected && Bricks[i].type === "Разрушаемый") {
+                            f++;
+                            if (this.select_bonus)
+                                ts = true;
+                            if (this.select_bonus === 'Нет') {
+                                Bricks[i].bonus = '_';
+                                Bricks[i].bg_image = '';
+                            } else {
+                                Bricks[i].bonus = Bonuses[bonusIndex(this.select_bonus)].code;
+                                Bricks[i].bg_image = Bonuses[bonusIndex(this.select_bonus)].pic;
+                            }
+
+                        }
+                    }
+                    if (f === 0) {
+                        alert('Ничего не выбрано!');
+                        return;
+                    }
+                    if (!ts) {
+                        alert('Выберите бонус!');
+                        return;
+                    }
+                    if (this.isRemove && ts)
+                        removeSelection();
+                },
+                unSelect: function () {
+                    removeSelection();
+                },
+                selectAll: function () {
+                    for (var i = 0; i < 100; i++) {
+                        Bricks[i].isSelected = true;
+                    }
+                },
+                download: function () {
+                    var str_brick;
+                    var data = "";
+                    var filename = "level.txt";
+                    var type = "text/plain;charset=utf-8";
+
+                    for (var i = 0; i < 100; i++) {
+                        str_brick = Bricks[i].code;
+                        str_brick = str_brick + Bricks[i].strength + Bricks[i].bonus;
+                        data += str_brick;
+                    }
+
+                    var file = new Blob([data], {type: type});
+                    if (window.navigator.msSaveOrOpenBlob) // IE10+
+                        window.navigator.msSaveOrOpenBlob(file, filename);
+                    else { // Others
+                        var a = document.createElement("a"),
+                                url = URL.createObjectURL(file);
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        setTimeout(function () {
+                            document.body.removeChild(a);
+                            window.URL.revokeObjectURL(url);
+                        }, 0);
+                    }
+                },
+                loadData: function () {
+                    this.isModal = true;
+                    this.code_text = '';
+                },
+                applyCode: function () {
+                    var bl_code, st_code, bo_code;
+                    var cl;
+                    var str = this.code_text;
+                    for (i = 0; i < 100; i++) {
+                        Bricks[i].id = i;
+                        Bricks[i].isSelected = false;
+
+                        bl_code = str.substr(i * 3, 1);
+                        st_code = Number(str.substr(i * 3 + 1, 1));
+                        bo_code = str.substr(i * 3 + 2, 1);
+
+                        switch (bl_code) {
+                            case "a":
+                                Bricks[i].type = "Пусто";
+                                Bricks[i].color = bgColor;
+                                Bricks[i].code = "a";
+                                Bricks[i].strength = 0;
+                                Bricks[i].bonus = "_";
+                                Bricks[i].bg_image = "";
+                                break;
+                            case "b":
+                            case "c":
+                            case "d":
+                            case "e":
+                            case "f":
+                            case "g":
+                                Bricks[i].type = "Разрушаемый";
+                                Bricks[i].code = bl_code;
+                                Bricks[i].strength = st_code;
+                                Bricks[i].bonus = bo_code;
+                                if (bo_code !== "_") {
+                                    Bricks[i].bg_image = Bonuses[bonusIndex(bo_code)].pic;
+                                } else {
+                                    Bricks[i].bg_image = "";
+                                }
+                                switch (bl_code) {
+                                    case "b":
+                                        cl = bricksColor["Красный"];
+                                        break;
+                                    case "c":
+                                        cl = bricksColor["Голубой"];
+                                        break;
+                                    case "d":
+                                        cl = bricksColor["Малиновый"];
+                                        break;
+                                    case "e":
+                                        cl = bricksColor["Зеленый"];
+                                        break;
+                                    case "f":
+                                        cl = bricksColor["Желтый"];
+                                        break;
+                                    case "g":
+                                        cl = bricksColor["Синий"];
+                                }
+                                Bricks[i].color = mix("#1C1B17", cl, 25 * (st_code - 1));
+                                break;
+                            case "h":
+                                Bricks[i].type = "Неразрушаемый";
+                                Bricks[i].color = "#e6e6fa";
+                                Bricks[i].code = "h";
+                                Bricks[i].strength = 0;
+                                Bricks[i].bonus = "_";
+                                Bricks[i].bg_image = "";
+                                break;
+                            default:
+                                Bricks[i].type = "Пусто";
+                                Bricks[i].color = bgColor;
+                                Bricks[i].code = "a";
+                                Bricks[i].strength = 0;
+                                Bricks[i].bonus = "_";
+                                Bricks[i].bg_image = "";
+                        }
+                    }
+                    this.isModal = false;
+                },
+                closeModal: function () {
+                    this.isModal = false;
+                }
+            }
+        });
+        function mix(color_1, color_2, weight) {
+            function d2h(d) {
+                return d.toString(16);
+            }  // convert a decimal value to hex
+            function h2d(h) {
+                return parseInt(h, 16);
+            } // convert a hex value to decimal 
+
+            weight = (typeof (weight) !== 'undefined') ? weight : 50; // set the weight to 50%, if that argument is omitted
+
+            var color = "#";
+            color_1 = String(color_1).replace("#", "");
+            color_2 = String(color_2).replace("#", "");
+            for (var i = 0; i <= 5; i += 2) { // loop through each of the 3 hex pairs—red, green, and blue
+                var v1 = h2d(color_1.substr(i, 2)), // extract the current pairs
+                        v2 = h2d(color_2.substr(i, 2)),
+                        // combine the current pairs from each source color, according to the specified weight
+                        val = d2h(Math.floor(v2 + (v1 - v2) * (weight / 100.0)));
+                while (val.length < 2) {
+                    val = '0' + val;
+                } // prepend a '0' if val results in a single digit
+
+                color += val; // concatenate val to our new color string
+            }
+
+            return color; // PROFIT!
+        }
+
+        function removeSelection() {
+            for (var i = 0; i < 100; i++) {
+                if (Bricks[i].isSelected) {
+                    Bricks[i].isSelected = false;
+                }
+            }
+        }
+        function bonusIndex(s) {
+            for (var i = 0; i < 26; i++) {
+                if (Bonuses[i].name === s)
+                    return i;
+                if (Bonuses[i].code === s)
+                    return i;
+            }
+        }
+    </script>
+</body>
+</html>
