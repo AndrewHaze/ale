@@ -153,7 +153,7 @@
         var down = false;
         var bgColor = "#f7f9fb";
 
-        for (i = 0; i < 100; i++) {
+        for (i = 0; i < 121; i++) {
             Bricks[i] = {id: i, type: 'Пусто', color: bgColor, code: 'a', strength: 0, bonus: '_', bg_image: '', isSelected: false};
         }
 
@@ -228,7 +228,7 @@
                     var f = 0;
                     var cs = true;
                     var ts = true;
-                    for (i = 0; i < 100; i++) {
+                    for (i = 0; i < 121; i++) {
                         if (Bricks[i].isSelected) {
                             f++;
                             switch (this.select_type) {
@@ -297,7 +297,7 @@
                 applyBonusSettings: function () {
                     var f = 0;
                     var ts = false;
-                    for (var i = 0; i < 100; i++) {
+                    for (var i = 0; i < 121; i++) {
                         if (Bricks[i].isSelected && Bricks[i].type === "Разрушаемый") {
                             f++;
                             if (this.select_bonus)
@@ -327,7 +327,7 @@
                     removeSelection();
                 },
                 selectAll: function () {
-                    for (var i = 0; i < 100; i++) {
+                    for (var i = 0; i < 121; i++) {
                         Bricks[i].isSelected = true;
                     }
                 },
@@ -337,7 +337,7 @@
                     var filename = "level.txt";
                     var type = "text/plain;charset=utf-8";
 
-                    for (var i = 0; i < 100; i++) {
+                    for (var i = 0; i < 121; i++) {
                         str_brick = Bricks[i].code;
                         str_brick = str_brick + Bricks[i].strength + Bricks[i].bonus;
                         data += str_brick;
@@ -367,7 +367,7 @@
                     var bl_code, st_code, bo_code;
                     var cl;
                     var str = this.code_text;
-                    for (i = 0; i < 100; i++) {
+                    for (i = 0; i < 121; i++) {
                         Bricks[i].id = i;
                         Bricks[i].isSelected = false;
 
@@ -424,7 +424,7 @@
                                 Bricks[i].type = "Неразрушаемый";
                                 Bricks[i].color = "#e6e6fa";
                                 Bricks[i].code = "h";
-                                Bricks[i].strength = 0;
+                                Bricks[i].strength = 4;
                                 Bricks[i].bonus = "_";
                                 Bricks[i].bg_image = "";
                                 break;
@@ -444,6 +444,7 @@
                 }
             }
         });
+
         function mix(color_1, color_2, weight) {
             function d2h(d) {
                 return d.toString(16);
@@ -473,12 +474,13 @@
         }
 
         function removeSelection() {
-            for (var i = 0; i < 100; i++) {
+            for (var i = 0; i < 121; i++) {
                 if (Bricks[i].isSelected) {
                     Bricks[i].isSelected = false;
                 }
             }
         }
+
         function bonusIndex(s) {
             for (var i = 0; i < 26; i++) {
                 if (Bonuses[i].name === s)
@@ -487,6 +489,7 @@
                     return i;
             }
         }
+        
     </script>
 </body>
 </html>
