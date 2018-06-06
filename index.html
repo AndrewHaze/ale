@@ -37,26 +37,24 @@
                     <option>Пусто</option>
                 </select>
             </div>
-            <div v-if="select_type === 'Разрушаемый'">
-                <div class="row">
-                    <select v-model="select_color">
-                        <option disabled value="">Выберите цвет</option>
-                        <option>Красный</option>
-                        <option>Голубой</option>
-                        <option>Малиновый</option>
-                        <option>Зеленый</option>
-                        <option>Желтый</option>
-                        <option>Синий</option>
-                    </select>
-                </div>
-                <div class="row">Прочность:
-                    <input type="radio" id="one" value="1" v-model="picked">
-                    <label for="one">1</label>
-                    <input type="radio" id="two" value="2" v-model="picked">
-                    <label for="two">2</label>
-                    <input type="radio" id="three" value="3" v-model="picked">
-                    <label for="three">3</label>
-                </div>
+            <div class="row">
+                <select v-model="select_color" :disabled="select_type != 'Разрушаемый'">
+                    <option disabled value="">Выберите цвет</option>
+                    <option>Красный</option>
+                    <option>Голубой</option>
+                    <option>Малиновый</option>
+                    <option>Зеленый</option>
+                    <option>Желтый</option>
+                    <option>Синий</option>
+                </select>
+            </div>
+            <div class="row">Прочность:
+                <input type="radio" id="one" value="1" v-model="picked" :disabled="(select_type != 'Разрушаемый') || (select_color === '')">
+                <label for="one">1</label>
+                <input type="radio" id="two" value="2" v-model="picked" :disabled="(select_type != 'Разрушаемый') || (select_color === '')">
+                <label for="two">2</label>
+                <input type="radio" id="three" value="3" v-model="picked" :disabled="(select_type != 'Разрушаемый') || (select_color === '')">
+                <label for="three">3</label>
             </div>
             <button v-on:click="applyBlockSettings" class="m-top">Применить</button>
             <h4>Бонус<div v-if="activeBonusImage !== ''" class="bonus_preview"><img v-bind:src="activeBonusImage"></div></h4>
@@ -264,16 +262,22 @@
                                     Bricks[i].type = this.select_type;
                                     Bricks[i].code = "h";
                                     Bricks[i].color = "#e6e6fa";
+                                    Bricks[i].bonus = "_";
+                                    Bricks[i].bg_image = '';
                                     break;
                                 case "Пусто":
                                     Bricks[i].type = this.select_type;
                                     Bricks[i].code = "a";
                                     Bricks[i].color = bgColor;
+                                    Bricks[i].bonus = "_";
+                                    Bricks[i].bg_image = '';
                                     break;
                                 default:
                                     Bricks[i].type = this.select_type;
                                     Bricks[i].code = "a";
                                     Bricks[i].color = bgColor;
+                                    Bricks[i].bonus = "_";
+                                    Bricks[i].bg_image = '';
                                     ts = false;
                             }
 
@@ -444,7 +448,6 @@
                 }
             }
         });
-
         function mix(color_1, color_2, weight) {
             function d2h(d) {
                 return d.toString(16);
@@ -489,7 +492,6 @@
                     return i;
             }
         }
-        
     </script>
 </body>
 </html>
