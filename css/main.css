@@ -64,10 +64,10 @@ body {
 .brick:after {
     content: "";
     position: absolute;
-    width: 51px;
-    height: 26px;
-    left: -1;
-    top: -1;
+    width: 48px;
+    height: 24px;
+    left: 1;
+    top: 1;
     border: 1px solid transparent;
 }    
 
