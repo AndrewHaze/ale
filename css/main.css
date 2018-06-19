@@ -64,15 +64,15 @@ body {
 .brick:after {
     content: "";
     position: absolute;
-    width: 48px;
-    height: 24px;
-    left: 1 px;
-    top: 1 px;
-    border: 1px solid red;
+    width: 50px;
+    height: 25px;
+    left: -1px;
+    top: -1px;
+    border: 1px solid transparent;
 }    
 
 
-.brick:after:hover {
+.brick:hover::after {
     border: 1px solid lightblue;
 }    
 
