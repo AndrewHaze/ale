@@ -61,7 +61,17 @@ body {
     user-select: none; 
 }
 
-.brick:hover {
+.brick:after {
+    position: absolute;
+    width: 49px;
+    height: 24px;
+    left: 0;
+    top: 0;
+    border: 1px solid transparent;
+}    
+
+
+.brick:after:hover {
     border: 1px solid lightblue;
 }    
 
