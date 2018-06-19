@@ -66,8 +66,8 @@ body {
     position: absolute;
     width: 48px;
     height: 24px;
-    left: 1px;
-    top: 1px;
+    left: 1 px;
+    top: 1 px;
     border: 1px solid red;
 }    
 
