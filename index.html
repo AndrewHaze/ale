@@ -26,7 +26,12 @@
             </div>     
         </div>
         <div class="toolbox">
-            <h4>Блок<div v-if="activeColor != '#f7f9fb'" class="brick_preview" :style="{ 'background-color': activeColor }"></div></h4>
+            <h4>Блок
+                <div v-if="activeColor != '#f7f9fb'" class="brick_preview" :style="{ 'background-color': activeColor }">
+                     <div v-if="activeColor === '#be1f27'" class="romb"></div>
+                     <div v-if="activeColor === '#0000ff'" class="tlp"></div>
+                </div>
+            </h4>
             <div class="row">
                 <select v-model="select_type">
                     <option disabled value="">Выберите тип</option>
@@ -56,7 +61,7 @@
                 <input type="radio" id="three" value="3" v-model="picked" :disabled="(select_type != 'Разрушаемый') || (select_color === '')">
                 <label for="three">3</label>
             </div>
-            <button v-on:click="applyBlockSettings" class="m-top">Применить</button>
+            <button :disabled="select_type === '' " v-on:click="applyBlockSettings" class="m-top">Применить</button>
             <h4>Бонус<div v-if="activeBonusImage !== ''" class="bonus_preview"><img v-bind:src="activeBonusImage"></div></h4>
             <div class="row">
                 <select id="s_bonus" v-model="select_bonus"  class="m-bottom">
@@ -66,7 +71,7 @@
                     </optgroup>   
                 </select>
             </div>
-            <button v-on:click="applyBonusSettings">Применить</button>
+            <button :disabled="select_bonus === ''" v-on:click="applyBonusSettings">Применить</button>
             <div class="h-line"></div>
             <h4>Выделение</h4>
             <div class="row row-label m-bottom-10">
@@ -90,7 +95,7 @@
         </div>
         <div v-if="isModal" class='modal'>
             <h4>Код уровня</h4>
-            <textarea v-model="code_text"></textarea>
+            <textarea autofocus v-model="code_text"> </textarea>
             <div class="m-footer">
                 <button v-on:click="applyCode">Загрузить</button>
                 <button v-on:click="closeModal">Отменить</button>
@@ -100,7 +105,8 @@
     <script>
         var i;
         var Bricks = [];
-        var bricksColor = {"Красный": "#ff1919", "Голубой": "#1ffff9", "Малиновый": "#f339ff", "Зеленый": "#2aff2d", "Желтый": "#ffa54c", "Синий": "#1919ff"};
+        var bricksColor = {"Красный": "#ff1919", "Голубой": "#1ffff9", "Малиновый": "#f339ff", "Зеленый": "#2aff2d", "Желтый": "#fed700", "Синий": "#1919ff"};
+        var mixColor = {"Красный": "#7f0000", "Голубой": "#1C1B17", "Малиновый": "#1C1B17", "Зеленый": "#1C1B17", "Желтый": "#ff0000", "Синий": "#1C1B17"};
         var Bonuses = [];
         Bonuses[0] = {code: "a", name: "Жизнь", pic: "image/live.png"};
         Bonuses[1] = {code: "b", name: "Замедление", pic: "image/slow.png"};
@@ -179,22 +185,29 @@
                 select_type: function (val) {
                     switch (val) {
                         case "Разрушаемый":
-                            this.activeColor = mix("#1C1B17", bricksColor[this.select_color], 25 * (this.picked - 1));
+                            this.activeColor = mix(mixColor[this.select_color], bricksColor[this.select_color], 25 * (this.picked - 1));
                             if (this.activeColor === '#NaNde0f')
                                 this.activeColor = bgColor;
                             break;
                         case "Неразрушаемый":
                             this.activeColor = "#e6e6fa";
                             break;
+                        case "Бомба":
+                            this.activeColor = "#be1f27";
+                            break;
+                        case "Телепорт":
+                            this.activeColor = "#0000ff";
+                            break;
                         default:
                             this.activeColor = bgColor;
+                            this.special = "";
                     }
                 },
                 picked: function (val) {
-                    this.activeColor = mix("#1C1B17", bricksColor[this.select_color], 25 * (val - 1));
+                    this.activeColor = mix(mixColor[this.select_color], bricksColor[this.select_color], 25 * (val - 1));
                 },
                 select_color: function (val) {
-                    this.activeColor = mix("#1C1B17", bricksColor[val], 25 * (this.picked - 1));
+                    this.activeColor = mix(mixColor[val], bricksColor[val], 25 * (this.picked - 1));
                 },
                 select_bonus: function (val) {
                     if (val !== "Нет")
@@ -235,6 +248,8 @@
                                         Bricks[i].type = this.select_type;
                                         Bricks[i].color = this.activeColor;
                                         Bricks[i].strength = this.picked;
+                                        if (Bricks[i].bg_image === 'image/exp.png' || Bricks[i].bg_image === 'image/tlp.png')
+                                            Bricks[i].bg_image = "";
                                         switch (this.select_color) {
                                             case "Красный":
                                                 Bricks[i].code = "b";
@@ -264,6 +279,20 @@
                                     Bricks[i].color = "#e6e6fa";
                                     Bricks[i].bonus = "_";
                                     Bricks[i].bg_image = '';
+                                    break;
+                                case "Бомба":
+                                    Bricks[i].type = this.select_type;
+                                    Bricks[i].code = "i";
+                                    Bricks[i].color = "#be1f27";
+                                    Bricks[i].bonus = "_";
+                                    Bricks[i].bg_image = 'image/exp.png';
+                                    break;
+                                case "Телепорт":
+                                    Bricks[i].type = this.select_type;
+                                    Bricks[i].code = "j";
+                                    Bricks[i].color = "#0000ff";
+                                    Bricks[i].bonus = "_";
+                                    Bricks[i].bg_image = 'image/tlp.png';
                                     break;
                                 case "Пусто":
                                     Bricks[i].type = this.select_type;
@@ -369,7 +398,7 @@
                 },
                 applyCode: function () {
                     var bl_code, st_code, bo_code;
-                    var cl;
+                    var cl, mc;
                     var str = this.code_text;
                     for (i = 0; i < 121; i++) {
                         Bricks[i].id = i;
@@ -406,23 +435,29 @@
                                 switch (bl_code) {
                                     case "b":
                                         cl = bricksColor["Красный"];
+                                        mc = mixColor["Красный"];
                                         break;
                                     case "c":
                                         cl = bricksColor["Голубой"];
+                                        mc = mixColor["Голубой"];
                                         break;
                                     case "d":
                                         cl = bricksColor["Малиновый"];
+                                        mc = mixColor["Малиновый"];
                                         break;
                                     case "e":
                                         cl = bricksColor["Зеленый"];
+                                        mc = mixColor["Зеленый"];
                                         break;
                                     case "f":
                                         cl = bricksColor["Желтый"];
+                                        mc = mixColor["Желтый"];
                                         break;
                                     case "g":
                                         cl = bricksColor["Синий"];
+                                        mc = mixColor["Синий"];
                                 }
-                                Bricks[i].color = mix("#1C1B17", cl, 25 * (st_code - 1));
+                                Bricks[i].color = mix(mc, cl, 25 * (st_code - 1));
                                 break;
                             case "h":
                                 Bricks[i].type = "Неразрушаемый";
@@ -431,6 +466,22 @@
                                 Bricks[i].strength = 4;
                                 Bricks[i].bonus = "_";
                                 Bricks[i].bg_image = "";
+                                break;
+                            case "i":
+                                Bricks[i].type = this.select_type;
+                                Bricks[i].code = "i";
+                                Bricks[i].strength = 1;
+                                Bricks[i].color = "#be1f27";
+                                Bricks[i].bonus = "_";
+                                Bricks[i].bg_image = "image/exp.png";
+                                break;
+                            case "j":
+                                Bricks[i].type = this.select_type;
+                                Bricks[i].code = "j";
+                                Bricks[i].strength = 4;
+                                Bricks[i].color = "#0000ff";
+                                Bricks[i].bonus = "_";
+                                Bricks[i].bg_image = "image/tlp.png";
                                 break;
                             default:
                                 Bricks[i].type = "Пусто";
