@@ -62,6 +62,7 @@ body {
 }
 
 .brick:after {
+    content: "";
     position: absolute;
     width: 49px;
     height: 24px;
