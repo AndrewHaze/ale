@@ -121,6 +121,18 @@ h4 {
     top: -3px;
 }
 
+.romb {
+    margin: auto;
+    height: 100%;
+    background-image: url("../image/exp.png");
+}
+
+.tlp {
+    margin: auto;
+    height: 100%;
+    background-image: url("../image/tlp.png");
+}
+
 .bonus_preview {
     position: absolute;
     width: 24px;
