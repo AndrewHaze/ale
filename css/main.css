@@ -5,6 +5,7 @@ html,  body {
 }
 
 body {
+    position: relative;
     font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background-color: #9eb0c7;
     color: #343a42;
@@ -17,17 +18,21 @@ body {
     position: relative;
     align-items: center;
     justify-content: space-between;
+    
 }
 
 .container {
     width: 551px;
+    min-width: 551px;
     height: 725px;
+    min-height: 725px;
     box-sizing: content-box;
     padding: 1px 0;
     border: 3px solid #464e58;
     border-right: 3px solid darkgray;
     border-bottom-color: #f7f9fb;
     background-color: #f7f9fb;
+    margin-top: 20px; 
 }
 
 .wrap {
@@ -35,6 +40,27 @@ body {
     flex-flow: row wrap;
     align-content: flex-start;
     background-color: #f7f9fb;
+}
+
+.header {
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 20px 220px 0 0;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 0;
+}
+
+.version {
+    text-align: center;
+    font-size: 10px;
+    margin: 2px 0 20px;
 }
 
 .grid {
@@ -71,10 +97,9 @@ body {
     border: 1px solid transparent;
 }    
 
-
 .brick:hover::after {
     border: 1px solid lightblue;
-}    
+} 
 
 .brick +.brick {
     margin-left: 1px;
@@ -93,8 +118,8 @@ body {
     position: absolute;
     left: -1px;
     top: -1px;
-    width: 50px;
-    height: 25px;
+    width: 51px;
+    height: 26px;
     background-color: black;
     opacity: 0.2;
 }
