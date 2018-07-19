@@ -1,39 +1,33 @@
 <!DOCTYPE html>
 <html lang="ru">
-    <head>
-        <meta charset="utf-8">
-        <title>PA Level Editor</title>
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
-        <link href="css/normalize.css" rel="stylesheet" type="text/css" />
-        <link href="css/main.css" rel="stylesheet" type="text/css" />
-    </head>
-    <body>
-        <div class="header">
-            <h1>Level Editor for Project A</h1>
-            <div class="version">Version 1.0 Beta</div>
-        </div>
-        <div id = "content" class = "content">
-            <div></div>
-            <div class = "container">
 
-                <div id="wrapper" class = "wrap" :class="{ grid: isGrid, borderline: isBorder }" @mouseleave="mouseLeave">
-                     <brick-item
-                        v-for="item in itemList"
-                        :brick="item"
-                        :key="item.id"
-                        :id="item.id"
-                        :class="{ selected: item.isSelected }"
-                        :style="{ 'background-color': item.color, 'background-image': 'url(' + item.bg_image +')' }"
-                        @mousedown.native="mouseLeftDown($event)" 
-                        @mouseup.native="mouseLeftUp()"
-                        @mouseover.native="select($event)"> 
+<head>
+    <meta charset="utf-8">
+    <title>PA Level Editor</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <link href="css/normalize.css" rel="stylesheet" type="text/css" />
+    <link href="css/main.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <div class="header">
+        <h1>Level Editor for Project A</h1>
+        <div class="version">Version 1.0 Beta</div>
+    </div>
+    <div id="content" class="content">
+        <div></div>
+        <div class="container">
+
+            <div id="wrapper" class="wrap" :class="{ grid: isGrid, borderline: isBorder }" @mouseleave="mouseLeave">
+                <brick-item v-for="item in itemList" :brick="item" :key="item.id" :id="item.id" :class="{ selected: item.isSelected }" :style="{ 'background-color': item.color, 'background-image': 'url(' + item.bg_image +')' }"
+                    @mousedown.native="mouseLeftDown($event)" @mouseup.native="mouseLeftUp()" @mouseover.native="select($event)">
                 </brick-item>
-            </div>     
+            </div>
         </div>
         <div class="toolbox">
             <h4>Блок
                 <div v-if="activeColor != '#f7f9fb'" class="brick_preview" :style="{ 'background-color': activeColor }">
-                     <div v-if="activeColor === '#be1f27'" class="romb"></div>
+                    <div v-if="activeColor === '#be1f27'" class="romb"></div>
                     <div v-if="activeColor === '#0000ff'" class="tlp"></div>
                 </div>
             </h4>
@@ -67,13 +61,17 @@
                 <label for="three">3</label>
             </div>
             <button :disabled="select_type === '' " v-on:click="applyBlockSettings" class="m-top">Применить</button>
-            <h4>Бонус<div v-if="activeBonusImage !== ''" class="bonus_preview"><img v-bind:src="activeBonusImage"></div></h4>
+            <h4>Бонус
+                <div v-if="activeBonusImage !== ''" class="bonus_preview">
+                    <img v-bind:src="activeBonusImage">
+                </div>
+            </h4>
             <div class="row">
-                <select id="s_bonus" v-model="select_bonus"  class="m-bottom">
+                <select id="s_bonus" v-model="select_bonus" class="m-bottom">
                     <option disabled value="">Выберите бонус</option>
                     <option>Нет</option>
                     <optgroup label="Полезные">
-                    </optgroup>   
+                    </optgroup>
                 </select>
             </div>
             <button :disabled="select_bonus === ''" v-on:click="applyBonusSettings">Применить</button>
@@ -104,43 +102,161 @@
             <div class="m-footer">
                 <button v-on:click="applyCode">Загрузить</button>
                 <button v-on:click="closeModal">Отменить</button>
-            </div>    
-        </div>   
+            </div>
+        </div>
     </div>
     <script>
-        var i;
+        const numberOfBricks = 11 * 22;
         var Bricks = [];
-        var bricksColor = {"Красный": "#ff1919", "Голубой": "#1ffff9", "Малиновый": "#f339ff", "Зеленый": "#2aff2d", "Желтый": "#fed700", "Синий": "#1919ff"};
-        var mixColor = {"Красный": "#7f0000", "Голубой": "#1C1B17", "Малиновый": "#1C1B17", "Зеленый": "#1C1B17", "Желтый": "#ff0000", "Синий": "#1C1B17"};
+        var bricksColor = {
+            "Красный": "#ff1919",
+            "Голубой": "#1ffff9",
+            "Малиновый": "#f339ff",
+            "Зеленый": "#2aff2d",
+            "Желтый": "#fed700",
+            "Синий": "#1919ff"
+        };
+        var mixColor = {
+            "Красный": "#7f0000",
+            "Голубой": "#1C1B17",
+            "Малиновый": "#1C1B17",
+            "Зеленый": "#1C1B17",
+            "Желтый": "#ff0000",
+            "Синий": "#1C1B17"
+        };
         var Bonuses = [];
-        Bonuses[0] = {code: "a", name: "Жизнь", pic: "image/live.png"};
-        Bonuses[1] = {code: "b", name: "Замедление", pic: "image/slow.png"};
-        Bonuses[2] = {code: "c", name: "Магнит", pic: "image/magnet.png"};
-        Bonuses[3] = {code: "d", name: "Стрелялка", pic: "image/ack.png"};
-        Bonuses[4] = {code: "e", name: "Утроение", pic: "image/triple.png"};
-        Bonuses[5] = {code: "f", name: "Супер", pic: "image/ram.png"};
-        Bonuses[6] = {code: "g", name: "Без вредителей", pic: "image/absent.png"};
-        Bonuses[7] = {code: "h", name: "Следущий уровень", pic: "image/next.png"};
-        Bonuses[8] = {code: "i", name: "Платформа шире", pic: "image/enlarge.png"};
-        Bonuses[9] = {code: "j", name: "Пол", pic: "image/floor.png"};
-        Bonuses[10] = {code: "k", name: "", pic: ""};
-        Bonuses[11] = {code: "l", name: "", pic: ""};
-        Bonuses[12] = {code: "m", name: "Случайный +", pic: "image/random+.png"};
-        Bonuses[13] = {code: "n", name: "Смерть", pic: "image/death.png"};
-        Bonuses[14] = {code: "o", name: "Ускорение", pic: "image/quick.png"};
-        Bonuses[15] = {code: "p", name: "Супер вредители", pic: "image/pest.png"};
-        Bonuses[16] = {code: "q", name: "Супер блоки", pic: "image/shield.png"};
-        Bonuses[17] = {code: "r", name: "Платформа уже", pic: "image/reduce.png"};
-        Bonuses[18] = {code: "s", name: "Без бонусов", pic: "image/nobonus.png"};
-        Bonuses[19] = {code: "t", name: "Рестарт", pic: "image/anew.png"};
-        Bonuses[20] = {code: "u", name: "Шарик-призрак", pic: "image/invisibility.png"};
-        Bonuses[21] = {code: "v", name: "", pic: ""};
-        Bonuses[22] = {code: "w", name: "", pic: ""};
-        Bonuses[23] = {code: "x", name: "", pic: ""};
-        Bonuses[24] = {code: "y", name: "", pic: ""};
-        Bonuses[25] = {code: "z", name: "Случайный -", pic: "image/random-.png"};
+        Bonuses[0] = {
+            code: "a",
+            name: "Жизнь",
+            pic: "image/live.png"
+        };
+        Bonuses[1] = {
+            code: "b",
+            name: "Замедление",
+            pic: "image/slow.png"
+        };
+        Bonuses[2] = {
+            code: "c",
+            name: "Магнит",
+            pic: "image/magnet.png"
+        };
+        Bonuses[3] = {
+            code: "d",
+            name: "Стрелялка",
+            pic: "image/ack.png"
+        };
+        Bonuses[4] = {
+            code: "e",
+            name: "Утроение",
+            pic: "image/triple.png"
+        };
+        Bonuses[5] = {
+            code: "f",
+            name: "Супер",
+            pic: "image/ram.png"
+        };
+        Bonuses[6] = {
+            code: "g",
+            name: "Без вредителей",
+            pic: "image/absent.png"
+        };
+        Bonuses[7] = {
+            code: "h",
+            name: "Следущий уровень",
+            pic: "image/next.png"
+        };
+        Bonuses[8] = {
+            code: "i",
+            name: "Платформа шире",
+            pic: "image/enlarge.png"
+        };
+        Bonuses[9] = {
+            code: "j",
+            name: "Пол",
+            pic: "image/floor.png"
+        };
+        Bonuses[10] = {
+            code: "k",
+            name: "",
+            pic: ""
+        };
+        Bonuses[11] = {
+            code: "l",
+            name: "",
+            pic: ""
+        };
+        Bonuses[12] = {
+            code: "m",
+            name: "Случайный +",
+            pic: "image/random+.png"
+        };
+        Bonuses[13] = {
+            code: "n",
+            name: "Смерть",
+            pic: "image/death.png"
+        };
+        Bonuses[14] = {
+            code: "o",
+            name: "Ускорение",
+            pic: "image/quick.png"
+        };
+        Bonuses[15] = {
+            code: "p",
+            name: "Супер вредители",
+            pic: "image/pest.png"
+        };
+        Bonuses[16] = {
+            code: "q",
+            name: "Супер блоки",
+            pic: "image/shield.png"
+        };
+        Bonuses[17] = {
+            code: "r",
+            name: "Платформа уже",
+            pic: "image/reduce.png"
+        };
+        Bonuses[18] = {
+            code: "s",
+            name: "Без бонусов",
+            pic: "image/nobonus.png"
+        };
+        Bonuses[19] = {
+            code: "t",
+            name: "Рестарт",
+            pic: "image/anew.png"
+        };
+        Bonuses[20] = {
+            code: "u",
+            name: "Шарик-призрак",
+            pic: "image/invisibility.png"
+        };
+        Bonuses[21] = {
+            code: "v",
+            name: "",
+            pic: ""
+        };
+        Bonuses[22] = {
+            code: "w",
+            name: "",
+            pic: ""
+        };
+        Bonuses[23] = {
+            code: "x",
+            name: "",
+            pic: ""
+        };
+        Bonuses[24] = {
+            code: "y",
+            name: "",
+            pic: ""
+        };
+        Bonuses[25] = {
+            code: "z",
+            name: "Случайный -",
+            pic: "image/random-.png"
+        };
         var s_bonus = document.getElementById("s_bonus");
-        for (i = 0; i < 13; i++) {
+        for (let i = 0; i < 13; i++) {
             if (Bonuses[i].name !== "") {
                 var option = document.createElement("option");
                 option.innerHTML = Bonuses[i].name;
@@ -151,7 +267,7 @@
         var optGroup = document.createElement('optgroup');
         optGroup.label = 'Вредные';
         s_bonus.appendChild(optGroup);
-        for (i = 13; i < 26; i++) {
+        for (let i = 13; i < 26; i++) {
             if (Bonuses[i].name !== "") {
                 var option = document.createElement("option");
                 option.innerHTML = Bonuses[i].name;
@@ -162,8 +278,17 @@
         var down = false;
         var bgColor = "#f7f9fb";
 
-        for (i = 0; i < 121; i++) {
-            Bricks[i] = {id: i, type: 'Пусто', color: bgColor, code: 'a', strength: 0, bonus: '_', bg_image: '', isSelected: false};
+        for (let i = 0; i < numberOfBricks; i++) {
+            Bricks[i] = {
+                id: i,
+                type: 'Пусто',
+                color: bgColor,
+                code: 'a',
+                strength: 0,
+                bonus: '_',
+                bg_image: '',
+                isSelected: false
+            };
         }
 
         Vue.component('brick-item', {
@@ -190,7 +315,8 @@
                 select_type: function (val) {
                     switch (val) {
                         case "Разрушаемый":
-                            this.activeColor = mix(mixColor[this.select_color], bricksColor[this.select_color], 25 * (this.picked - 1));
+                            this.activeColor = mix(mixColor[this.select_color], bricksColor[this.select_color],
+                                25 * (this.picked - 1));
                             if (this.activeColor === '#NaNde0f')
                                 this.activeColor = bgColor;
                             break;
@@ -209,7 +335,8 @@
                     }
                 },
                 picked: function (val) {
-                    this.activeColor = mix(mixColor[this.select_color], bricksColor[this.select_color], 25 * (val - 1));
+                    this.activeColor = mix(mixColor[this.select_color], bricksColor[this.select_color], 25 *
+                        (val - 1));
                 },
                 select_color: function (val) {
                     this.activeColor = mix(mixColor[val], bricksColor[val], 25 * (this.picked - 1));
@@ -244,7 +371,7 @@
                     var f = 0;
                     var cs = true;
                     var ts = true;
-                    for (i = 0; i < 121; i++) {
+                    for (let i = 0; i < numberOfBricks; i++) {
                         if (Bricks[i].isSelected) {
                             f++;
                             switch (this.select_type) {
@@ -253,7 +380,8 @@
                                         Bricks[i].type = this.select_type;
                                         Bricks[i].color = this.activeColor;
                                         Bricks[i].strength = this.picked;
-                                        if (Bricks[i].bg_image === 'image/exp.png' || Bricks[i].bg_image === 'image/tlp.png')
+                                        if (Bricks[i].bg_image === 'image/exp.png' || Bricks[i].bg_image ===
+                                            'image/tlp.png')
                                             Bricks[i].bg_image = "";
                                         switch (this.select_color) {
                                             case "Красный":
@@ -335,7 +463,7 @@
                 applyBonusSettings: function () {
                     var f = 0;
                     var ts = false;
-                    for (var i = 0; i < 121; i++) {
+                    for (let i = 0; i < numberOfBricks; i++) {
                         if (Bricks[i].isSelected && Bricks[i].type === "Разрушаемый") {
                             f++;
                             if (this.select_bonus)
@@ -365,7 +493,7 @@
                     removeSelection();
                 },
                 selectAll: function () {
-                    for (var i = 0; i < 121; i++) {
+                    for (let i = 0; i < numberOfBricks; i++) {
                         Bricks[i].isSelected = true;
                     }
                 },
@@ -375,18 +503,20 @@
                     var filename = "level.txt";
                     var type = "text/plain;charset=utf-8";
 
-                    for (var i = 0; i < 121; i++) {
+                    for (let i = 0; i < numberOfBricks; i++) {
                         str_brick = Bricks[i].code;
                         str_brick = str_brick + Bricks[i].strength + Bricks[i].bonus;
                         data += str_brick;
                     }
 
-                    var file = new Blob([data], {type: type});
+                    var file = new Blob([data], {
+                        type: type
+                    });
                     if (window.navigator.msSaveOrOpenBlob) // IE10+
                         window.navigator.msSaveOrOpenBlob(file, filename);
                     else { // Others
                         var a = document.createElement("a"),
-                                url = URL.createObjectURL(file);
+                            url = URL.createObjectURL(file);
                         a.href = url;
                         a.download = filename;
                         document.body.appendChild(a);
@@ -405,7 +535,7 @@
                     var bl_code, st_code, bo_code;
                     var cl, mc;
                     var str = this.code_text;
-                    for (i = 0; i < 121; i++) {
+                    for (i = 0; i < numberOfBricks; i++) {
                         Bricks[i].id = i;
                         Bricks[i].isSelected = false;
 
@@ -504,10 +634,11 @@
                 }
             }
         });
+
         function mix(color_1, color_2, weight) {
             function d2h(d) {
                 return d.toString(16);
-            }  // convert a decimal value to hex
+            } // convert a decimal value to hex
             function h2d(h) {
                 return parseInt(h, 16);
             } // convert a hex value to decimal 
@@ -517,11 +648,11 @@
             var color = "#";
             color_1 = String(color_1).replace("#", "");
             color_2 = String(color_2).replace("#", "");
-            for (var i = 0; i <= 5; i += 2) { // loop through each of the 3 hex pairs—red, green, and blue
+            for (let i = 0; i <= 5; i += 2) { // loop through each of the 3 hex pairs—red, green, and blue
                 var v1 = h2d(color_1.substr(i, 2)), // extract the current pairs
-                        v2 = h2d(color_2.substr(i, 2)),
-                        // combine the current pairs from each source color, according to the specified weight
-                        val = d2h(Math.floor(v2 + (v1 - v2) * (weight / 100.0)));
+                    v2 = h2d(color_2.substr(i, 2)),
+                    // combine the current pairs from each source color, according to the specified weight
+                    val = d2h(Math.floor(v2 + (v1 - v2) * (weight / 100.0)));
                 while (val.length < 2) {
                     val = '0' + val;
                 } // prepend a '0' if val results in a single digit
@@ -533,7 +664,7 @@
         }
 
         function removeSelection() {
-            for (var i = 0; i < 121; i++) {
+            for (let i = 0; i < numberOfBricks; i++) {
                 if (Bricks[i].isSelected) {
                     Bricks[i].isSelected = false;
                 }
@@ -541,7 +672,7 @@
         }
 
         function bonusIndex(s) {
-            for (var i = 0; i < 26; i++) {
+            for (let i = 0; i < 26; i++) {
                 if (Bonuses[i].name === s)
                     return i;
                 if (Bonuses[i].code === s)
@@ -550,4 +681,5 @@
         }
     </script>
 </body>
+
 </html>
