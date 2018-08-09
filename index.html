@@ -107,8 +107,7 @@
     </div>
     <script>
         const numberOfBricks = 11 * 22;
-        var Bricks = [];
-        var bricksColor = {
+        const bricksColor = {
             "Красный": "#ff1919",
             "Голубой": "#1ffff9",
             "Малиновый": "#f339ff",
@@ -116,7 +115,7 @@
             "Желтый": "#fed700",
             "Синий": "#1919ff"
         };
-        var mixColor = {
+        const mixColor = {
             "Красный": "#7f0000",
             "Голубой": "#1C1B17",
             "Малиновый": "#1C1B17",
@@ -124,7 +123,7 @@
             "Желтый": "#ff0000",
             "Синий": "#1C1B17"
         };
-        var Bonuses = [];
+        const Bonuses = [];
         Bonuses[0] = {
             code: "a",
             name: "Жизнь",
@@ -255,6 +254,7 @@
             name: "Случайный -",
             pic: "image/random-.png"
         };
+        
         var s_bonus = document.getElementById("s_bonus");
         for (let i = 0; i < 13; i++) {
             if (Bonuses[i].name !== "") {
@@ -277,7 +277,7 @@
 
         var down = false;
         var bgColor = "#f7f9fb";
-
+        var Bricks = [];
         for (let i = 0; i < numberOfBricks; i++) {
             Bricks[i] = {
                 id: i,
