@@ -83,6 +83,9 @@
             </div>
             <button v-on:click="unSelect">Снять все выделения</button>
             <button v-on:click="selectAll">Выделить всё</button>
+            <!-- <h4>Сдвиг</h4>
+            <button v-on:click="shiftUp()">Вверх</button>
+            <button v-on:click="shiftDown()">Вниз</button> -->
             <h4>Уровень</h4>
             <button v-on:click="loadData()">Загрузить</button>
             <button v-on:click="download()">Сохранить</button>
@@ -106,8 +109,11 @@
         </div>
     </div>
     <script>
-        const numberOfBricks = 11 * 22;
-        const bricksColor = {
+        const amountH = 11;
+        const amountV = 22;
+        const numberOfBricks = amountH * amountV;
+        var Bricks = [];
+        var bricksColor = {
             "Красный": "#ff1919",
             "Голубой": "#1ffff9",
             "Малиновый": "#f339ff",
@@ -115,7 +121,7 @@
             "Желтый": "#fed700",
             "Синий": "#1919ff"
         };
-        const mixColor = {
+        var mixColor = {
             "Красный": "#7f0000",
             "Голубой": "#1C1B17",
             "Малиновый": "#1C1B17",
@@ -123,7 +129,7 @@
             "Желтый": "#ff0000",
             "Синий": "#1C1B17"
         };
-        const Bonuses = [];
+        var Bonuses = [];
         Bonuses[0] = {
             code: "a",
             name: "Жизнь",
@@ -246,15 +252,14 @@
         };
         Bonuses[24] = {
             code: "y",
-            name: "",
-            pic: ""
+            name: "Случайный",
+            pic: "image/yy.png"
         };
         Bonuses[25] = {
             code: "z",
             name: "Случайный -",
             pic: "image/random-.png"
         };
-        
         var s_bonus = document.getElementById("s_bonus");
         for (let i = 0; i < 13; i++) {
             if (Bonuses[i].name !== "") {
@@ -277,7 +282,7 @@
 
         var down = false;
         var bgColor = "#f7f9fb";
-        var Bricks = [];
+
         for (let i = 0; i < numberOfBricks; i++) {
             Bricks[i] = {
                 id: i,
@@ -496,6 +501,12 @@
                     for (let i = 0; i < numberOfBricks; i++) {
                         Bricks[i].isSelected = true;
                     }
+                },
+                shiftUp: function () {
+                    //Bricks = Bricks.concat(Bricks.splice(amountH, Bricks.length ));
+                },
+                shiftDown: function () {
+                    // Bricks = Bricks.concat(Bricks.splice(0, Bricks.length - amountH));
                 },
                 download: function () {
                     var str_brick;
