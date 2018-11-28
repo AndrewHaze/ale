@@ -1,3 +1,3 @@
 Game Level Editor for Project A
 
-Powered by Vue.js
+С использованием Vue.js как JQuery
